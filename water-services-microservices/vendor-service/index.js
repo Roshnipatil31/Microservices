@@ -1,7 +1,9 @@
 const express = require('express');
 const connectRabbitMQ = require('../src/rabbitmq');
+const connectDB = require("../src/db");
 
 const app = express();
+connectDB();
 
 connectRabbitMQ('vendor', (channel) => {
     channel.consume('vendor', (message) => {
