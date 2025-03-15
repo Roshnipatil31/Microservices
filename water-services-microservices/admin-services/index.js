@@ -1,6 +1,6 @@
 const express = require('express');
 const connectRabbitMQ = require('../admin-services/src/Database/rabbitmq');
-const router = require('./src/routes/adminRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 
 const connectDB = require("../admin-services/src/Database/db");
 
@@ -11,7 +11,7 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/', router);
+app.use("/", adminRoutes);
 
 connectRabbitMQ('admin', (channel) => {
     channel.consume('admin', (message) => {
