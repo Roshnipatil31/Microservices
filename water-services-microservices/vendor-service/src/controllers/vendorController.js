@@ -1,72 +1,7 @@
-// const Vendor = require("../models/Vendor");
-// const jwt = require("jsonwebtoken");
-// // const bcrypt = require("bcryptjs");
-
-// // Generate JWT Token
-// const generateToken = (id) => {
-//   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
-// };
-
-// const signup = async (req, res) => {
-//   const { name, email, password } = req.body;
-
-//   try {
-//     let vendor = await Vendor.findOne({ email });
-
-//     if (vendor) {
-//       return res.status(400).json({ message: "Vendor already exists" });
-//     }
-
-//     vendor = await Vendor.create({ name, email, password });
-
-//     res.status(201).json({
-//       _id: vendor.id,
-//       name: vendor.name,
-//       email: vendor.email,
-//       token: generateToken(vendor.id),
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
-
-// const login = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const vendor = await Vendor.findOne({ email });
-
-//     if (!vendor) {
-//       return res.status(400).json({ message: "Invalid credentials" });
-//     }
-
-//     const isMatch = await vendor.matchPassword(password);
-//     if (!isMatch) {
-//       return res.status(400).json({ message: "Invalid credentials" });
-//     }
-
-//     res.json({
-//       _id: vendor.id,
-//       name: vendor.name,
-//       email: vendor.email,
-//       token: generateToken(vendor.id),
-//     });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };
-
-// const logout = async (req, res) => {
-//   res.json({ message: "Logout successful" });
-// };
-
-// module.exports = { signup, login, logout };
-
-
-const Vendor = require("../models/Vendor"); // ✅ Correct path
-const bcrypt = require("bcrypt"); // ✅ Make sure bcrypt is installed
-const jwt = require("jsonwebtoken"); // ✅ Make sure jsonwebtoken is installed
-require("dotenv").config(); // ✅ Load environment variables
+const Vendor = require("../models/Vendor"); 
+const bcrypt = require("bcrypt"); 
+const jwt = require("jsonwebtoken");
+require("dotenv").config(); 
 
 
 exports.signupVendor = async (req, res) => {
@@ -93,3 +28,40 @@ exports.signupVendor = async (req, res) => {
     }
 };
 
+exports.loginVendor = async (req, res) => {
+    try {
+        const { phone, password } = req.body;
+
+        // Check if vendor exists
+        const vendor = await Vendor.findOne({ phone });
+        if (!vendor) {
+            return res.status(404).json({ message: "Vendor not found" });
+        }
+
+        // Check password
+        const isPasswordValid = await bcrypt.compare(password, vendor.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Invalid password" });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ id: vendor._id }, process.env.JWT_SECRET, {
+            expiresIn: "1h",
+        });
+
+        res.status(200).json({ message: "Login successful", token });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+};
+
+exports.logoutVendor = async (req, res) => {
+    try {
+        // Invalidate token logic (if using Redis or a blacklist system)
+        res.status(200).json({ message: "Logout successful" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error });
+    }
+};
