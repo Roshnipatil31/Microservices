@@ -4,29 +4,28 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config(); 
 
 
-exports.signupVendor = async (req, res) => {
+exports.registerVendor = async (req, res) => {
+    const { name, phone, password, address, city, state, pincode, availaibility, location } = req.body;
+
     try {
-        const { name, phone, password } = req.body;
+        let existingVendor = await Vendor.findOne({ phone });
+        if (existingVendor) return res.status(400).json({ message: "Vendor already exists" });
 
-        // Check if vendor already exists
-        const existingVendor = await Vendor.findOne({ phone });
-        if (existingVendor) {
-            return res.status(400).json({ message: "Vendor already exists" });
-        }
-
-        // Hash password
+        // Hash Password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Save new vendor
-        const newVendor = new Vendor({ name, phone, password: hashedPassword });
-        await newVendor.save();
+        // Create new Vendor
+        const vendor = new Vendor({ 
+            name, phone, password: hashedPassword, address, city, state, pincode, availaibility, location 
+        });
 
+        await vendor.save();
         res.status(201).json({ message: "Vendor registered successfully" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error", error });
+        res.status(500).json({ error: error.message });
     }
 };
+
 
 exports.loginVendor = async (req, res) => {
     try {
@@ -53,6 +52,33 @@ exports.loginVendor = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error", error });
+    }
+};
+
+// Get Vendor Profile (Protected Route)
+exports.getVendorProfile = async (req, res) => {
+    try {
+        const vendor = await Vendor.findById(req.vendor.vendorId).select("-password");
+        if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+
+        res.json(vendor);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// Update Vendor Details (Protected Route)
+exports.updateVendor = async (req, res) => {
+    try {
+        const updatedVendor = await Vendor.findByIdAndUpdate(
+            req.vendor.vendorId,
+            req.body,
+            { new: true, runValidators: true }
+        ).select("-password");
+
+        res.json(updatedVendor);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 };
 
