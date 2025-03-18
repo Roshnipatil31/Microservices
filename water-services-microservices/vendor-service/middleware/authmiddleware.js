@@ -1,20 +1,28 @@
 const jwt = require("jsonwebtoken");
-const { Vendor } = require("../src/models/Vendor");
+const Vendor = require("../src/models/Vendor");
 
-exports.authenticateVendor = (req, res, next) => {
+
+module.exports.authenticateVendor = (req, res, next) => {
     const token = req.header("Authorization");
 
+    console.log("Received Token:", token); // Debugging line
+
     if (!token) {
-        return res.status(401).json({ message: "Access denied. No token provided." });
+        return res.status(401).json({ message: "Access Denied: No Token Provided" });
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.vendor = decoded;
+        // Ensure "Bearer" is case-insensitive
+        const tokenWithoutBearer = token.replace(/Bearer\s+/i, "").trim();
+        console.log("Token after removing 'Bearer':", tokenWithoutBearer); // Debugging line
+
+        const decoded = jwt.verify(tokenWithoutBearer, process.env.JWT_SECRET); // Ensure the secret matches
+        console.log("Decoded Token:", decoded); // Debugging line
+
+        req.vendor = { vendorId: decoded.id }; // Ensure the token payload contains 'id'
         next();
     } catch (error) {
-        res.status(400).json({ message: "Invalid token" });
+        console.error("JWT Verification Error:", error.message); // Debugging
+        res.status(401).json({ message: "Invalid Token" });
     }
 };
-
-

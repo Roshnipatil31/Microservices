@@ -56,20 +56,22 @@ exports.loginVendor = async (req, res) => {
 };
 
 // Get Vendor Profile (Protected Route)
-exports.getVendorProfile = async (req, res) => {
-    try {
-        const vendor = await Vendor.findById(req.vendor.vendorId).select("-password");
-        if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+// exports.getVendorProfile = async (req, res) => {
+//     try {
+//         const vendor = await Vendor.findById(req.vendor.vendorId).select("-password");
+//         if (!vendor) return res.status(404).json({ message: "Vendor not found" });
 
-        res.json(vendor);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
+//         res.json(vendor);
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };
 
 // Update Vendor Details (Protected Route)
 exports.updateVendor = async (req, res) => {
     try {
+        console.log("Vendor ID from token:", req.vendor.vendorId); // Debugging line
+
         const updatedVendor = await Vendor.findByIdAndUpdate(
             req.vendor.vendorId,
             req.body,
