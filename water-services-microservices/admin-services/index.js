@@ -1,10 +1,13 @@
 const express = require('express');
 const connectRabbitMQ = require('../admin-services/src/Database/rabbitmq');
 const adminRoutes = require('./src/routes/adminRoutes');
+const cors = require('cors');
+
 
 const connectDB = require("../admin-services/src/Database/db");
 
 const app = express();
+app.use(cors());
 
 connectDB();
 

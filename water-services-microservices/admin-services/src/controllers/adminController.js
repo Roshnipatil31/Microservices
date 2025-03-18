@@ -3,15 +3,14 @@ const jwt = require("jsonwebtoken");
 const Admin = require("../models/admin");
 require("dotenv").config();
 
-const ADMIN_PHONE = process.env.ADMIN_PHONE || "1234567890"; // Default for first-time setup
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "password123"; // Default password
+const ADMIN_PHONE = process.env.ADMIN_PHONE ; // Default for first-time setup
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ; // Default password
 
 /**
  * @desc Initialize Admin Account (Runs when server starts)
  */
-const initializeAdmin = async () => {
+exports.initializeAdmin = async () => {
   try {
-    console.log("Initializing Admin...");
 
     const existingAdmin = await Admin.findOne({ phone: ADMIN_PHONE });
 
@@ -32,49 +31,49 @@ const initializeAdmin = async () => {
 };
 
 // Run the function when the server starts
-initializeAdmin();
+exports.initializeAdmin();
 
 /**
  * @desc Login Admin
  * @route POST /admin/login
  * @access Public
  */
-const loginAdmin = async (req, res) => {
+exports.loginAdmin = async (req, res) => {
   try {
     const { phone, password } = req.body;
 
-    console.log("🔹 Received Login Request");
-    console.log("📞 Phone:", phone);
-    console.log("🔑 Password (plaintext, not recommended to log in production):", password);
-
-    // Check if the admin exists in DB
     const admin = await Admin.findOne({ phone });
     if (!admin) {
-      console.log("❌ Admin not found in DB.");
-      return res.status(400).json({ msg: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    console.log("✅ Admin found in DB:", admin.phone);
-    console.log("🔒 Stored Hashed Password:", admin.password);
-
-    // Compare the entered password with the hashed password in DB
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      console.log("❌ Password mismatch");
-      return res.status(400).json({ msg: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    // Generate JWT Token
-    const token = jwt.sign({ phone: admin.phone }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign({ id: admin._id, role: "admin" }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    console.log("✅ Login Successful!");
-    res.json({ msg: "Login successful", token });
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      admin: { id: admin._id, phone: admin.phone },
+    });
   } catch (error) {
-    console.error("❌ Login Error:", error.message);
-    res.status(500).json({ error: error.message });
+    console.error("Admin login error:", error);
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
 
-module.exports = { loginAdmin };
+exports.getAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.admin.adminId).select("-password");
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    res.json(admin);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
