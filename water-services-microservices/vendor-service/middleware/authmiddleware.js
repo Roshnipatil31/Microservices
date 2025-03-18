@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { Vendor } = require("../models/Vendor");
+const { Vendor } = require("../src/models/Vendor");
 
 exports.authenticateVendor = (req, res, next) => {
     const token = req.header("Authorization");
@@ -16,3 +16,5 @@ exports.authenticateVendor = (req, res, next) => {
         res.status(400).json({ message: "Invalid token" });
     }
 };
+
+
