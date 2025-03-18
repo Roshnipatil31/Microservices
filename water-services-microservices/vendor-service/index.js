@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const cors = require('cors');
 
 dotenv.config(); 
 
@@ -8,7 +9,9 @@ const vendorRoutes = require("./src/routes/vendorRoutes");
 const connectDB = require("./src/Database/db");
 const connectRabbitMQ = require("./src/Database/rabbitmq");
 
+
 const app = express();
+app.use(cors());
 app.use(express.json()); 
  
 app.use("/", vendorRoutes); 
