@@ -5,7 +5,8 @@ require("dotenv").config();
 
 
 exports.registerVendor = async (req, res) => {
-    const { name, phone, password, address, city, state, pincode, availaibility, location } = req.body;
+    const { name, phone, password } = req.body;
+    console.log("Incoming Data:", req.body); // Debugging Line
 
     try {
         let existingVendor = await Vendor.findOne({ phone });
@@ -16,7 +17,7 @@ exports.registerVendor = async (req, res) => {
 
         // Create new Vendor
         const vendor = new Vendor({ 
-            name, phone, password: hashedPassword, address, city, state, pincode, availaibility, location 
+            name, phone, password: hashedPassword
         });
 
         await vendor.save();
@@ -55,17 +56,6 @@ exports.loginVendor = async (req, res) => {
     }
 };
 
-// Get Vendor Profile (Protected Route)
-// exports.getVendorProfile = async (req, res) => {
-//     try {
-//         const vendor = await Vendor.findById(req.vendor.vendorId).select("-password");
-//         if (!vendor) return res.status(404).json({ message: "Vendor not found" });
-
-//         res.json(vendor);
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// };
 
 // Update Vendor Details (Protected Route)
 exports.updateVendor = async (req, res) => {
